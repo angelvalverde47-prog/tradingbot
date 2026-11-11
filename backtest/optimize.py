@@ -98,7 +98,11 @@ def main(argv=None):
     ok = [r for r in results if r["train"].get("trades", 0) >= a.min_trades]
     ok.sort(key=lambda r: -r["train"]["sharpe"])
     best = ok[0] if ok else None
-    baseline = evaluate(sim.Params(risk_pct=a.risk_pct))  # las reglas que usa el bot hoy (con riesgo 1 %)
+    cfg = json.loads(Path("config.json").read_text(encoding="utf-8"))  # las reglas que usa el bot hoy
+    baseline = evaluate(sim.Params(setups=tuple(cfg["setups"]), stop_atr_mult=cfg["stop_atr_mult"],
+                                   target_r=cfg["target_r"], max_hold_days=cfg["max_hold_days"],
+                                   max_positions=cfg["max_positions"], max_price_usd=cfg["max_price_usd"],
+                                   min_price_usd=cfg["min_price_usd"], risk_pct=a.risk_pct))
 
     spy_d = [str(d) for d in z["spy_days"]]
     spy_c = z["spy_close"]
@@ -126,7 +130,7 @@ def main(argv=None):
         f"- Referencia S&P 500 (SPY, comprar y mantener): entrenamiento {spy_tr:+.1f} %, validación {spy_te:+.1f} %.",
         f"- Combinaciones probadas: {len(results)}; con ≥ {a.min_trades} operaciones en entrenamiento: {len(ok)}.",
         "",
-        "## Reglas actuales del bot (riesgo 1 %)",
+        f"## Reglas actuales del bot (config.json: {baseline['params'].label()}), riesgo {a.risk_pct:g} %",
         f"- Entrenamiento: {fmt(baseline['train'])}",
         f"- Validación: {fmt(baseline['test'])}",
         "",
