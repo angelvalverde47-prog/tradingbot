@@ -77,7 +77,11 @@ class AlpacaBroker:
         return sorted(out)
 
     def daily_bars(self, symbols: list[str], days: int = 90, batch: int = 400) -> dict[str, Bars]:
-        end = datetime.now(timezone.utc) - timedelta(minutes=20)  # el SIP gratuito exige >15 min de antigüedad
+        # Solo días ya cerrados: hasta las 00:00 de hoy en Nueva York. Así, si se lanza a mano con el
+        # mercado abierto, no usa la vela a medias de hoy (y el SIP gratuito queda > 15 min atrás).
+        from zoneinfo import ZoneInfo
+        et = ZoneInfo("America/New_York")
+        end = datetime.combine(datetime.now(et).date(), datetime.min.time(), tzinfo=et)
         start = end - timedelta(days=days)
         out: dict[str, Bars] = {}
         for i in range(0, len(symbols), batch):
