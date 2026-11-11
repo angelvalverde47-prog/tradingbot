@@ -30,6 +30,9 @@ FUND_WORDS = ("ETF", "ETN", " FUND", "ISHARES", "PROSHARES", "DIREXION", "LEVERA
 
 
 def _headers():
+    missing = [k for k in ("ALPACA_API_KEY", "ALPACA_SECRET_KEY") if not os.environ.get(k)]
+    if missing:
+        raise SystemExit(f"Falta el secreto {', '.join(missing)} en GitHub (Settings > Secrets and variables > Actions).")
     return {"APCA-API-KEY-ID": os.environ["ALPACA_API_KEY"],
             "APCA-API-SECRET-KEY": os.environ["ALPACA_SECRET_KEY"],
             "Accept": "application/json"}
