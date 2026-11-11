@@ -1,0 +1,7 @@
+name: Diagnóstico
+on: workflow_dispatch
+jobs:
+  hola:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Actions funciona" && python3 --version
