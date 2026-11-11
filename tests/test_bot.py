@@ -209,3 +209,17 @@ def test_stats_from_orders_only():
     fa.fill_entry("AAA", date(2026, 11, 12)); fa.hit("AAA", "target", date(2026, 11, 13))
     s = stats(bot.trades())
     assert s["closed"] == 1 and s["wins"] == 1 and s["avg_r"] == 2.0
+
+
+def test_overlapping_runs_respect_max_positions():
+    """Dos pasadas a la vez: la segunda leyó el estado antes de que la primera comprase."""
+    bars = {s: breakout_bars(s, base=b, vol=v) for s, b, v in
+            [("AAA", 20, 5e6), ("BBB", 15, 4e6), ("CCC", 12, 3e6), ("DDD", 10, 2e6)]}
+    bot1, fa = make_bot(bars)
+    bot2 = core.Bot(Config(), fa, earnings_fn=lambda d, t: {}, kill_fn=lambda: False)
+    d = date(2026, 11, 12)
+    stale = bot2.trades()                        # la pasada 2 lee "no hay nada"
+    run(bot1, fa, d)                             # la pasada 1 compra AAA y BBB
+    bot2.new_entries(stale, d, {})               # la pasada 2 termina de escanear y quiere comprar
+    active = [t for t in bot1.trades() if t.status in ("open", "pending")]
+    assert len(active) == 2 and "Otra pasada" in " ".join(bot2.warnings)

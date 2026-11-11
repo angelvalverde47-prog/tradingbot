@@ -101,6 +101,16 @@ class Bot:
         for tk in rank(cands):
             if slots <= 0:
                 break
+            # Volver a leer Alpaca justo antes de cada compra: si otra pasada (otra pestaña, el cron)
+            # ha abierto posiciones mientras esta escaneaba, se respetan igualmente los límites.
+            fresh = [t for t in self.trades() if t.status in ("open", "pending")]
+            if len(fresh) >= self.cfg.max_positions:
+                self.warnings.append("Otra pasada ya ha ocupado los huecos libres; esta no abre nada más.")
+                break
+            if tk.symbol in {t.symbol for t in fresh}:
+                continue
+            slots = self.cfg.max_positions - len(fresh)
+            cash = min(cash, self.cfg.investable_usd - sum(t.qty * (t.entry_price or t.entry_limit) for t in fresh))
             if tk.cost > cash:  # no llega el efectivo: menos acciones, misma regla de mínimo
                 tk.qty = int(cash // tk.entry)
                 if tk.qty < 1 or tk.cost < self.cfg.min_order_usd:
