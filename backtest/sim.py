@@ -167,7 +167,7 @@ def run(bars: dict, sig: dict, p: Params, start: int, end: int, capital: float,
 
 def _close(pos, px, reason, t):
     pnl = (px - pos["entry"]) * pos["qty"]
-    risk = (pos["entry"] - pos["stop"]) * pos["qty"]
+    risk = (pos["limit"] - pos["stop"]) * pos["qty"]  # riesgo planeado (el de la ficha)
     return {"j": pos["j"], "qty": pos["qty"], "entry": pos["entry"], "exit": px, "reason": reason,
             "day_in": pos["day"], "day_out": t, "pnl": pnl, "r": pnl / risk if risk > 0 else 0.0}
 
