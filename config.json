@@ -2,9 +2,9 @@
   "_nota": "Importes en euros; el bot los convierte a dólares con eur_usd. Para cambiar una regla, edítala en GitHub: Vercel vuelve a publicar solo.",
   "budget_eur": 100,
   "cash_buffer_pct": 10,
-  "max_loss_per_trade_eur": 1,
+  "max_loss_per_trade_eur": 2,
   "min_order_eur": 5,
-  "max_drawdown_eur": 15,
+  "max_drawdown_eur": 25,
   "eur_usd": 1.11,
   "max_positions": 3,
   "setups": [
