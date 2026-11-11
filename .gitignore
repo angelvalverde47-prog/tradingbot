@@ -2,3 +2,5 @@
 .vercel/
 __pycache__/
 .pytest_cache/
+backtest/cache/
+backtest/results/

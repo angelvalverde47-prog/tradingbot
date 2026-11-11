@@ -1,0 +1,61 @@
+name: Backtest y optimización
+
+on:
+  workflow_dispatch:
+    inputs:
+      split:
+        description: "Fecha que separa entrenamiento y validación"
+        default: "2024-07-01"
+      risk_pct:
+        description: "Riesgo por operación (% del capital)"
+        default: "1.0"
+      feed:
+        description: "Fuente de datos de Alpaca (sip o iex)"
+        default: "sip"
+
+permissions:
+  contents: read
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dependencias
+        run: pip install numpy==2.1.3 pytest alpaca-py==0.45.0 tzdata
+
+      - name: Pruebas (el backtest usa las mismas reglas que el bot)
+        run: python -m pytest -q
+
+      - name: Caché de datos (se renueva cada semana)
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: backtest/cache
+          key: bars-${{ inputs.feed }}-${{ github.run_id }}
+          restore-keys: bars-${{ inputs.feed }}-
+
+      - name: Descargar velas diarias de Alpaca
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_SECRET_KEY: ${{ secrets.ALPACA_SECRET_KEY }}
+        run: |
+          if [ -f backtest/cache/bars.npz ] && [ $(( $(date +%s) - $(stat -c %Y backtest/cache/bars.npz) )) -lt 604800 ]; then
+            echo "Uso los datos en caché"
+          else
+            python -m backtest.data --start 2020-09-01 --feed "${{ inputs.feed }}"
+          fi
+
+      - name: Optimizar
+        run: python -m backtest.optimize --split "${{ inputs.split }}" --risk-pct "${{ inputs.risk_pct }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: resultados-backtest
+          path: backtest/results/
