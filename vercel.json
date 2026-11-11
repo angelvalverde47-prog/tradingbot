@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "api/run.py": { "maxDuration": 300 },
+    "api/report.py": { "maxDuration": 60 }
+  },
+  "crons": [
+    { "path": "/api/run", "schedule": "0 10 * * 1-5" }
+  ]
+}
